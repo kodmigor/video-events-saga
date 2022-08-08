@@ -1,0 +1,18 @@
+# OS or Editor folders
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+# NPM packages folder.
+node_modules/
+# Webpack output folder.
+dist/
+# Temporary files folder.
+/tmp/
+__snapshots__
+.eslintcache
+# Numerous always-ignore extensions
+*.log
+# Other
+*.other
+/coverage/
