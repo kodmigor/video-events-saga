@@ -1,8 +1,8 @@
 import React from "react";
-import {render} from "react-dom";
-import "./index.scss";
+import {createRoot} from 'react-dom/client';
 import {AppWrapper} from "../ui/app-wrapper";
+import "./index.scss";
 
-document.addEventListener("DOMContentLoaded", () => {
-  render(<AppWrapper />, document.getElementById("root"));
-});
+const rootElement = document.getElementById("root")!;
+const ReactRoot = createRoot(rootElement);
+ReactRoot.render(<AppWrapper />);
