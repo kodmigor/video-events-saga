@@ -3,8 +3,7 @@ import {Dir, WebpackConfigProps} from "../lib";
 
 export function getStylesRule({IS_PROD}: WebpackConfigProps) {
     return {
-        include: Dir.SRC,
-        test: /\.s?css$/,
+        test: /\.(sa|sc|c)ss$/,
         use: [
             {
                 loader: IS_PROD ? MiniCssExtractPlugin.loader : "style-loader",

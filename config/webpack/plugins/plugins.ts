@@ -9,8 +9,8 @@ import {getMiniCssExtractPlugin} from "./plugin.miniCssExtract";
 export function getPlugins(props: WebpackConfigProps): WebpackPluginInstance[] {
     const plugins = [
         getCleanPlugin(props),
-        getHtmlWebpackPlugin(props),
         getMiniCssExtractPlugin(props),
+        getHtmlWebpackPlugin(props),
         getForkTsCheckerPlugin(props),
     ];
 
