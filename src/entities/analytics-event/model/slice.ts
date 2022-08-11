@@ -1,18 +1,27 @@
 import { createAction, createEntityAdapter, createReducer } from '@reduxjs/toolkit'
-import { AnalyticsEvent } from 'shared/models'
+import { AnalyticsEvent, AnalyticsEventStoreState, TimestampIdsRefs } from 'shared/models'
 
 enum AnalyticsEventActionType {
     SET_ALL = 'Analytics event :: set all',
+    SET_TIMESTAMP_IDS_REFS = 'Analytics event :: set timestamp -> ids refs',
 }
 
 const setAll = createAction(AnalyticsEventActionType.SET_ALL, (payload: AnalyticsEvent[]) => ({ payload }))
+const setTimestampIdsRefs = createAction(AnalyticsEventActionType.SET_TIMESTAMP_IDS_REFS, (payload: TimestampIdsRefs) => ({ payload }))
 
 const analyticsEventAdapter = createEntityAdapter<AnalyticsEvent>()
 
-const reducer = createReducer(analyticsEventAdapter.getInitialState(), (builder) => {
-  builder
-    .addCase(setAll, analyticsEventAdapter.setAll)
-})
+const reducer = createReducer(
+  analyticsEventAdapter.getInitialState<AnalyticsEventStoreState>({
+    timestampIdsRefs: {}
+  }),
+  (builder) => {
+    builder
+      .addCase(setAll, analyticsEventAdapter.setAll)
+      .addCase(setTimestampIdsRefs, (state, action) => {
+        state.timestampIdsRefs = action.payload
+      })
+  })
 
 const {
   selectById: byId,
@@ -30,6 +39,7 @@ function selectById (eventId: number) {
 
 export {
   setAll,
+  setTimestampIdsRefs,
   reducer,
   selectById,
   selectAll,

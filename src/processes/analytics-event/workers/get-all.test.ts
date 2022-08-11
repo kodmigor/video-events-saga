@@ -2,7 +2,7 @@ import { analyticsEventApi, analyticsEventModel } from 'entities/analytics-event
 import { createMock } from 'ts-auto-mock'
 import { expectSaga, testSaga } from 'redux-saga-test-plan'
 import * as matchers from 'redux-saga-test-plan/matchers'
-import { AnalyticsEvent } from 'shared/models'
+import { AnalyticsEvent, AnalyticsEventStoreState } from 'shared/models'
 import { getAllWorker } from './get-all'
 import { EntityState } from '@reduxjs/toolkit'
 
@@ -10,12 +10,17 @@ const action = analyticsEventApi.getAll()
 
 test('get all analytics events request worker', () => {
   const events: AnalyticsEvent[] = []
+  const refs = AnalyticsEvent.makeTimestampIdsRefs(events)
 
   testSaga(getAllWorker, action)
     .next()
     .call(action.payload.request)
     .next(events)
+    .call(AnalyticsEvent.makeTimestampIdsRefs, events)
+    .next(refs)
     .put(analyticsEventModel.setAll(events))
+    .next()
+    .put(analyticsEventModel.setTimestampIdsRefs(refs))
     .next()
     .isDone()
 })
@@ -23,9 +28,11 @@ test('get all analytics events request worker', () => {
 test('fetches the user', () => {
   const event = createMock<AnalyticsEvent>()
   const events = [event]
-  const finalState = createMock<EntityState<AnalyticsEvent>>({
+  const refs = AnalyticsEvent.makeTimestampIdsRefs(events)
+  const finalState = createMock<AnalyticsEventStoreState & EntityState<AnalyticsEvent>>({
     entities: { [event.id]: { ...event } },
-    ids: [event.id]
+    ids: [event.id],
+    timestampIdsRefs: refs
   })
 
   return expectSaga(getAllWorker, action)
