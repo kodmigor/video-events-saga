@@ -41,7 +41,9 @@ export function MainPageView () {
     for (let i = 0; i < skippedTimestamps.length; i++) {
       const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
       if (eventIds?.length) {
-        console.log('--- eventIds: ', eventIds)
+        for (let y = 0; y < eventIds.length; y++) {
+          dispatch(analyticsEventModel.fire(eventIds[y]))
+        }
       }
     }
   }
