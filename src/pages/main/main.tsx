@@ -1,13 +1,13 @@
 import './main.scss'
 
-import React from 'react'
-import { MILLISECONDS_PER_SECOND, RefOrNull } from 'shared/lib'
-import { VideoJSView } from 'shared/packages'
-import videojs, { VideoJsPlayer } from 'video.js'
-import { useDispatch, useSelector } from 'react-redux'
 import { analyticsEventApi, analyticsEventModel } from 'entities/analytics-event'
 import range from 'lodash.range'
+import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { MINIMUM_INTERVAL, RefOrNull } from 'shared/lib'
 import { TimestampIdsRefs } from 'shared/models'
+import { getCeiledCurrentTimeInMs, videoPlayerModel, VideoPlayerView } from 'shared/packages'
+import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
 
 export function MainPageView () {
   const dispatch = useDispatch()
@@ -24,7 +24,7 @@ export function MainPageView () {
     timestampIdsRefs.current = _timestampIdsRefs
   }, [_timestampIdsRefs])
 
-  const videoJsOptions = {
+  const playerOptions:VideoJsPlayerOptions = {
     autoplay: false,
     controls: true,
     responsive: true,
@@ -46,22 +46,22 @@ export function MainPageView () {
     }
   }
 
-  const handlePlayerReady = (player: VideoJsPlayer) => {
+  function handlePlayerReady (player: VideoJsPlayer) {
     playerRef.current = player
-    let reqId: number
+    let intervalId: number
 
-    const startTracking = function () {
-      checkForEvents(Math.ceil(player.currentTime() * MILLISECONDS_PER_SECOND))
+    function startTracking () {
+      checkForEvents(getCeiledCurrentTimeInMs(player))
     }
 
     player.on('play', () => {
-      videojs.log('player is playing')
-      reqId = player.setInterval(startTracking, 0)
+      dispatch(videoPlayerModel.play())
+      intervalId = player.setInterval(startTracking, MINIMUM_INTERVAL)
     })
 
     player.on('pause', () => {
-      videojs.log('player is paused')
-      if (reqId) player.clearInterval(reqId)
+      dispatch(videoPlayerModel.pause(getCeiledCurrentTimeInMs(player)))
+      if (intervalId) player.clearInterval(intervalId)
     })
 
     // player.on('dispose', () => {
@@ -71,7 +71,7 @@ export function MainPageView () {
 
   return (
         <div className="MainPage">
-            <VideoJSView options={videoJsOptions} onReady={handlePlayerReady} />
+            <VideoPlayerView options={playerOptions} onReady={handlePlayerReady} />
         </div>
   )
 }

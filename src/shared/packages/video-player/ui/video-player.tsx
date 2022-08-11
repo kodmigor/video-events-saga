@@ -3,12 +3,12 @@ import { RefOrNull } from 'shared/lib'
 import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
 import 'video.js/dist/video-js.css'
 
-type VideoJSViewProps = {
+type VideoPlayerViewProps = {
     options: VideoJsPlayerOptions
     onReady(player: VideoJsPlayer): void
 }
 
-export function VideoJSView (props: VideoJSViewProps) {
+export function VideoPlayerView (props: VideoPlayerViewProps) {
   const videoRef = React.useRef(null)
   const playerRef = React.useRef<RefOrNull<VideoJsPlayer>>(null)
   const { options, onReady } = props
