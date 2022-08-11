@@ -1,7 +1,6 @@
 import React from 'react'
 import { RefOrNull } from 'shared/lib'
 import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
-import 'video.js/dist/video-js.css'
 
 type VideoPlayerViewProps = {
     options: VideoJsPlayerOptions
