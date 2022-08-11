@@ -32,9 +32,13 @@ const {
 } = analyticsEventAdapter.getSelectors((state: RootState) => state.entities.analyticsEvent)
 
 function selectById (eventId: number) {
-  return function (state: any) {
+  return function (state: RootState) {
     return byId(state, eventId)
   }
+}
+
+function selectTimestampIdsRefs (state: RootState) {
+  return state.entities.analyticsEvent.timestampIdsRefs
 }
 
 export {
@@ -44,6 +48,7 @@ export {
   selectById,
   selectAll,
   selectEntities,
+  selectTimestampIdsRefs,
   selectIds,
   selectTotal
 }
