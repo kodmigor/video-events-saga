@@ -20,7 +20,7 @@ type AnalyticsEventIds = Array<AnalyticsEventId>
 
 export type TimestampIdsRefs = Record<number, AnalyticsEventIds>
 export type AnalyticsEventStoreState = {
-  fired: AnalyticsEventId[]
+  firedIds: AnalyticsEventId[]
   timestampIdsRefs: TimestampIdsRefs
 }
 type TimestampIdsRefsEntities = {

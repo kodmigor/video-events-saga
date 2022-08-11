@@ -14,5 +14,8 @@ export default {
   moduleDirectories: ['<rootDir>/src', 'node_modules'],
   transform: {
     '.+(ts|tsx)': 'ts-jest'
+  },
+  moduleNameMapper: {
+    '\\.(css|less|sass|scss)$': '<rootDir>/src/shared/tests/style-mock.ts'
   }
 }

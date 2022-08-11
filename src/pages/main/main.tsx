@@ -8,6 +8,7 @@ import { MINIMUM_INTERVAL, RefOrNull } from 'shared/lib'
 import { TimestampIdsRefs } from 'shared/models'
 import { getCeiledCurrentTimeInMs, videoPlayerModel, VideoPlayerView } from 'shared/packages'
 import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
+import { AnalyticsEventsOverlay } from 'widgets/analytics-events-overlay'
 
 export function MainPageView () {
   const dispatch = useDispatch()
@@ -36,9 +37,11 @@ export function MainPageView () {
   }
 
   function checkForEvents (currentTimestampInMs: number) {
+    // console.log('currentTimestampInMs ', currentTimestampInMs)
     const skippedTimestamps = range(prevTimestampInMs.current, currentTimestampInMs)
     prevTimestampInMs.current = currentTimestampInMs
     for (let i = 0; i < skippedTimestamps.length; i++) {
+      // console.log('----skippedTimestamps[i] ', skippedTimestamps[i])
       const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
       if (eventIds?.length) {
         for (let y = 0; y < eventIds.length; y++) {
@@ -57,12 +60,25 @@ export function MainPageView () {
     }
 
     player.on('play', () => {
+      prevTimestampInMs.current = getCeiledCurrentTimeInMs(player)
       dispatch(videoPlayerModel.play())
+      videojs.log('play')
       intervalId = player.setInterval(startTracking, MINIMUM_INTERVAL)
+    })
+    player.on('timeupdate', () => {
+      videojs.log('player seeking')
+      // checkForEvents(getCeiledCurrentTimeInMs(player))
+    })
+    player.on('seeking', () => {
+      videojs.log('player seeking')
+    })
+    player.on('seeked', () => {
+      videojs.log('player seeked')
     })
 
     player.on('pause', () => {
       dispatch(videoPlayerModel.pause(getCeiledCurrentTimeInMs(player)))
+      videojs.log('pause')
       if (intervalId) player.clearInterval(intervalId)
     })
 
@@ -73,6 +89,7 @@ export function MainPageView () {
 
   return (
         <div className="MainPage">
+            <AnalyticsEventsOverlay />
             <VideoPlayerView options={playerOptions} onReady={handlePlayerReady} />
         </div>
   )
