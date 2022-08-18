@@ -14,7 +14,6 @@ export function MainPageView () {
   const dispatch = useDispatch()
   const playerRef = React.useRef<RefOrNull<VideoJsPlayer>>(null)
   const _timestampIdsRefs = useSelector(analyticsEventModel.selectTimestampIdsRefs)
-  const prevTimestampInMs = React.useRef(0)
   const timestampIdsRefs = React.useRef<TimestampIdsRefs>({})
 
   React.useEffect(() => {
@@ -36,44 +35,39 @@ export function MainPageView () {
     }]
   }
 
-  function checkForEvents (currentTimestampInMs: number) {
-    // console.log('currentTimestampInMs ', currentTimestampInMs)
-    const skippedTimestamps = range(prevTimestampInMs.current, currentTimestampInMs)
-    prevTimestampInMs.current = currentTimestampInMs
-    for (let i = 0; i < skippedTimestamps.length; i++) {
-      // console.log('----skippedTimestamps[i] ', skippedTimestamps[i])
-      const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
-      if (eventIds?.length) {
-        for (let y = 0; y < eventIds.length; y++) {
-          dispatch(analyticsEventModel.fire(eventIds[y]))
-        }
-      }
-    }
-  }
-
   function handlePlayerReady (player: VideoJsPlayer) {
     playerRef.current = player
     let intervalId: number
+    let prevTimestampInMs = 0
+    let currentTimestampInMs = 0
 
-    function startTracking () {
-      checkForEvents(getCeiledCurrentTimeInMs(player))
+    function seekForEvents () {
+      if (prevTimestampInMs === currentTimestampInMs) return
+      console.log({ prevTimestampInMs })
+      console.log({ currentTimestampInMs })
+      const skippedTimestamps = range(prevTimestampInMs, currentTimestampInMs)
+      prevTimestampInMs = currentTimestampInMs
+      for (let i = 0; i < skippedTimestamps.length; i++) {
+        const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
+        if (eventIds?.length) {
+          for (let y = 0; y < eventIds.length; y++) {
+            dispatch(analyticsEventModel.fire(eventIds[y]))
+          }
+        }
+      }
     }
 
-    player.on('play', () => {
-      prevTimestampInMs.current = getCeiledCurrentTimeInMs(player)
-      dispatch(videoPlayerModel.play())
-      videojs.log('play')
-      intervalId = player.setInterval(startTracking, MINIMUM_INTERVAL)
-    })
     player.on('timeupdate', () => {
-      videojs.log('player seeking')
-      // checkForEvents(getCeiledCurrentTimeInMs(player))
+      console.log('player.paused() ', player.paused())
+      currentTimestampInMs = getCeiledCurrentTimeInMs(player)
     })
-    player.on('seeking', () => {
-      videojs.log('player seeking')
-    })
-    player.on('seeked', () => {
-      videojs.log('player seeked')
+
+    player.on('playing', () => {
+      prevTimestampInMs = getCeiledCurrentTimeInMs(player)
+      dispatch(videoPlayerModel.play())
+      videojs.log('playing')
+
+      intervalId = player.setInterval(seekForEvents, MINIMUM_INTERVAL)
     })
 
     player.on('pause', () => {
@@ -81,10 +75,6 @@ export function MainPageView () {
       videojs.log('pause')
       if (intervalId) player.clearInterval(intervalId)
     })
-
-    // player.on('dispose', () => {
-    //     videojs.log('player will dispose');
-    // });
   }
 
   return (

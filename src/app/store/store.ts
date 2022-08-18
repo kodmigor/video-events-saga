@@ -12,7 +12,10 @@ const logger = createLogger({
 
 export const store = configureStore({
   reducer: rootReducer,
-  middleware: [sagaMiddleware, logger] as const
+  middleware: [
+    sagaMiddleware,
+    logger
+  ] as const
 })
 
 sagaMiddleware.run(rootSaga)
