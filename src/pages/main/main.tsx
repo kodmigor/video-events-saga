@@ -27,6 +27,10 @@ export function MainPageView () {
   const playerOptions:VideoJsPlayerOptions = {
     autoplay: false,
     controls: true,
+    controlBar: {
+      fullscreenToggle: false,
+      pictureInPictureToggle: false
+    },
     responsive: true,
     fluid: true,
     sources: [{
@@ -42,10 +46,37 @@ export function MainPageView () {
     let currentTimestampInMs = 0
 
     function seekForEvents () {
+      // Вариант 2
+
+      // Замыкание переменной `currentTimestampInMs` позволит значительно увеличить частоту поиска актуальных событий.
+      // Переменная `MAX_SKIPPED_TIMESTAMPS` ограничивает количество временных меток для поиска,
+      // что позволяет избегать ситуаций, когда:
+
+      // (*)
+      // при перемотке видео значение переменной `prevTimestampInMs` не успевает обновиться
+      // до обновления значения переменной `currentTimestampInMs`, и массив меток `skippedTimestamps`
+      // содержит все метки, пропущенные при перемотке, тем самым отображая все, якобы актуальные, события.
+
+      // Однако такой варинат также значительно увеличивает частоту постановки функции `seekForEvents` в очередь событий js,
+      // что может повлиять на корректность работы.
+      // (пример: очередной вызов функции `onPlaying` после перемотки может встать в очередь уже после того, как там оказалась
+      // функция `seekForEvents`, вызванная во время работы предыдущего запуска `onPlaying`,
+      // создавая тем самым ситуацию, описанную выше (*))
+
+      // Субъективно, визуальной разницы между обоими вариантами нет,
+      // поэтому, если в ТЗ нет конкретики по вопросу частоты поиска событий аналитики во время воспроизведения,
+      // а также в связи с вышеописанными рисками, полагаю, что варинат 1 более оптимальный.
+
+      // const currentTimestampInMs = getCeiledCurrentTimeInMs(player)
+      // const MAX_SKIPPED_TIMESTAMPS = 20
+      // if (prevTimestampInMs === currentTimestampInMs) return
+      // const skippedTimestamps = range(prevTimestampInMs, currentTimestampInMs)
+
+      // if (skippedTimestamps.length > 20) return
+
       if (prevTimestampInMs === currentTimestampInMs) return
-      console.log({ prevTimestampInMs })
-      console.log({ currentTimestampInMs })
       const skippedTimestamps = range(prevTimestampInMs, currentTimestampInMs)
+
       prevTimestampInMs = currentTimestampInMs
       for (let i = 0; i < skippedTimestamps.length; i++) {
         const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
@@ -61,14 +92,15 @@ export function MainPageView () {
       console.log('player.paused() ', player.paused())
       currentTimestampInMs = getCeiledCurrentTimeInMs(player)
     })
-
-    player.on('playing', () => {
+    function onPlaying () {
       prevTimestampInMs = getCeiledCurrentTimeInMs(player)
       dispatch(videoPlayerModel.play())
       videojs.log('playing')
 
       intervalId = player.setInterval(seekForEvents, MINIMUM_INTERVAL)
-    })
+    }
+
+    player.on('playing', onPlaying)
 
     player.on('pause', () => {
       dispatch(videoPlayerModel.pause(getCeiledCurrentTimeInMs(player)))
