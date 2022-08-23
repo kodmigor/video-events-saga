@@ -1,11 +1,20 @@
-import { analyticsEventModel, AnalyticsEventView } from 'entities/analytics-event'
+import { analyticsEventModel, AnalyticsEventFiredView } from 'entities/analytics-event'
 import React from 'react'
 import { useSelector } from 'react-redux'
+import { bemBlock } from 'shared/lib'
+import './overlay.scss'
 
-export function AnalyticsEventsOverlay () {
-  const firedEventIds = useSelector(analyticsEventModel.selectFiredIds)
+const eventsOverlayViewBlock = bemBlock('AnalyticsEventsOverlay')
 
-  const eventViews = firedEventIds.map((id) => <AnalyticsEventView id={id} key={id} />)
+interface AnalyticsEventsOverlayView {
+  className?: string
+}
 
-  return <div style={{ position: 'absolute', width: '100%', height: '100%' }}>{eventViews}</div>
+export function AnalyticsEventsOverlayView ({ className }:AnalyticsEventsOverlayView) {
+  const firedEventsIds = useSelector(analyticsEventModel.selectFiredIds)
+
+  const eventViews = React.useMemo(() => firedEventsIds.map((id) => <AnalyticsEventFiredView id={id} key={id} />),
+    [firedEventsIds.length])
+
+  return <div className={eventsOverlayViewBlock.mix(className)}>{eventViews}</div>
 }

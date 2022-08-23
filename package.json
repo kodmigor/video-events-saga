@@ -69,6 +69,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "1.8.3",
     "bem-cn": "3.0.1",
+    "dayjs": "1.11.5",
     "lodash.range": "3.2.0",
     "normalizr": "3.6.2",
     "react": "18.2.0",

@@ -1,0 +1,15 @@
+.VideoAnalytics {
+    width: 80%;
+    height: 80%;
+    display: flex;
+    gap: 10px;
+    overflow: hidden;
+    &__eventsList {
+        flex: 1;
+    }
+    &__player {
+        position: relative;
+        display: flex;
+        width: 80%;
+    }
+}

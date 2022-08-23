@@ -1,16 +1,18 @@
-import './main.scss'
+import './video-analytics.scss'
 
 import { analyticsEventApi, analyticsEventModel } from 'entities/analytics-event'
 import range from 'lodash.range'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { MINIMUM_INTERVAL, RefOrNull } from 'shared/lib'
+import { bemBlock, MINIMUM_INTERVAL, RefOrNull } from 'shared/lib'
 import { TimestampIdsRefs } from 'shared/models'
 import { getCeiledCurrentTimeInMs, videoPlayerChannel, VideoPlayerView } from 'shared/packages'
 import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
-import { AnalyticsEventsOverlay } from 'widgets/analytics-events-overlay'
+import { AnalyticsEventsOverlayView } from 'widgets/analytics-events-overlay'
+import { AnalyticsEventsListView } from 'widgets/analytics-events-list'
 
-export function MainPageView () {
+export function VideoAnalyticsPageView () {
+  const videoAnalyticsBlock = bemBlock('VideoAnalytics')
   const dispatch = useDispatch()
   const playerRef = React.useRef<RefOrNull<VideoJsPlayer>>(null)
   const _timestampIdsRefs = useSelector(analyticsEventModel.selectTimestampIdsRefs)
@@ -25,7 +27,7 @@ export function MainPageView () {
     timestampIdsRefs.current = _timestampIdsRefs
   }, [_timestampIdsRefs])
 
-  const playerOptions:VideoJsPlayerOptions = {
+  const playerOptions: VideoJsPlayerOptions = {
     autoplay: false,
     controls: true,
     controlBar: {
@@ -120,9 +122,11 @@ export function MainPageView () {
   }
 
   return (
-        <div className="MainPage">
-            <AnalyticsEventsOverlay />
-            <VideoPlayerView options={playerOptions} onReady={onPlayerReady} />
-        </div>
+    <div className={videoAnalyticsBlock()}>
+      <AnalyticsEventsListView className={videoAnalyticsBlock('eventsList')} />
+      <div className={videoAnalyticsBlock('player')}>
+        <VideoPlayerView Overlay={AnalyticsEventsOverlayView} options={playerOptions} onReady={onPlayerReady} />
+      </div>
+    </div>
   )
 }

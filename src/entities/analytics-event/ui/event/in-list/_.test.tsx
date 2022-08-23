@@ -1,38 +1,39 @@
 import { EntityState } from '@reduxjs/toolkit'
 import React from 'react'
+import dayjs from 'dayjs'
+import { milliseconds } from 'shared/lib'
 import { AnalyticsEvent, AnalyticsEventStoreState } from 'shared/models'
 import { renderWithStore } from 'test-utils'
 import { createMock } from 'ts-auto-mock'
-import { AnalyticsEventView, eventViewBlock } from './event'
+import { eventViewBlock } from '../lib/bem-block'
+import { AnalyticsEventInListView } from './in-list'
 
-describe('Analytics event view', () => {
-  let zone:AnalyticsEvent['zone']
+describe('Analytics event in list view', () => {
+  let timestamp:milliseconds
   let event: AnalyticsEvent
   let analyticsEvent: AnalyticsEventStoreState & EntityState<AnalyticsEvent>
   let renderEvent : (eventId: number) => ReturnType<typeof renderWithStore>
   const eventViewCssSelector = `.${eventViewBlock.toString()}`
+  const eventTimestampCssSelector = `.${eventViewBlock.toString()} pre`
 
   beforeAll(() => {
-    zone = { height: 20, left: 50, top: 25, width: 30 }
-    event = createMock<AnalyticsEvent>({ id: 11, zone })
+    timestamp = 320303
+    event = createMock<AnalyticsEvent>({ id: 11, timestamp })
     analyticsEvent = createMock<AnalyticsEventStoreState & EntityState<AnalyticsEvent>>({
       entities: { [event.id]: { ...event } },
       ids: [event.id]
     })
     renderEvent = (eventId) => renderWithStore(
-      <AnalyticsEventView id={eventId} />,
-      { preloadedState: { entities: { analyticsEvent } } }
+    <AnalyticsEventInListView id={eventId} />,
+    { preloadedState: { entities: { analyticsEvent } } }
     )
   })
 
-  test('should be displayed with correct zone styles ', () => {
+  test('should contain formatted timestamp ', () => {
     const { container } = renderEvent(event.id)
-    const eventView = container.querySelector<HTMLDivElement>(eventViewCssSelector)!
+    const eventTimestamp = container.querySelector<HTMLDivElement>(eventTimestampCssSelector)!
 
-    expect(eventView.style.height).toEqual(`${zone.height}px`)
-    expect(eventView.style.left).toEqual(`${zone.left}px`)
-    expect(eventView.style.top).toEqual(`${zone.top}px`)
-    expect(eventView.style.width).toEqual(`${zone.width}px`)
+    expect(eventTimestamp.textContent).toEqual(dayjs(event.timestamp).format('mm:ss:SSS'))
   })
 
   test('should return null if store has not event with id passed into component ', () => {

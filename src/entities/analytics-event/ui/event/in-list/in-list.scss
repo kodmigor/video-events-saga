@@ -1,0 +1,12 @@
+.AnalyticsEvent--inList {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    &:hover {
+        text-decoration: underline;
+    }
+    pre {
+        font-weight: bold;
+    }
+}

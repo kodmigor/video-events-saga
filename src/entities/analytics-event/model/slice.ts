@@ -18,7 +18,9 @@ type setAll = ReturnType<typeof setAll>
 const setTimestampIdsRefs = createAction(SET_TIMESTAMP_IDS_REFS, (payload: TimestampIdsRefs) => ({ payload }))
 type setTimestampIdsRefs = ReturnType<typeof setTimestampIdsRefs>
 
-const analyticsEventAdapter = createEntityAdapter<AnalyticsEvent>()
+const analyticsEventAdapter = createEntityAdapter<AnalyticsEvent>({
+  sortComparer: (eventA, eventB) => eventA.timestamp - eventB.timestamp
+})
 
 const reducer = createReducer(
   analyticsEventAdapter.getInitialState<AnalyticsEventStoreState>({
@@ -27,7 +29,7 @@ const reducer = createReducer(
   }),
   (builder) => {
     builder
-      .addCase(fire, (state, action) => { state.firedIds = state.firedIds.concat(action.payload) })
+      .addCase(fire, (state, action) => { state.firedIds = [...new Set(state.firedIds.concat(action.payload))] })
       .addCase(drop, (state, action) => { state.firedIds = state.firedIds.filter((id) => id !== action.payload) })
       .addCase(dropAll, (state) => { state.firedIds = [] })
       .addCase(setAll, analyticsEventAdapter.setAll)
