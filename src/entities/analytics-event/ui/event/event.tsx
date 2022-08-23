@@ -7,11 +7,11 @@ import './event.scss'
 type AnalyticsEventViewProps = {
     id: number
 }
+export const eventViewBlock = bemBlock('AnalyticsEvent')
 
 export function AnalyticsEventView ({ id }:AnalyticsEventViewProps) {
-  const block = bemBlock('AnalyticsEvent')
   const event = useSelector(analyticsEventModel.getSelectorById(id))
   if (!event) return null
 
-  return <div className={block()} style={{ ...event.zone }}/>
+  return <div className={eventViewBlock()} style={{ ...event.zone }}/>
 }
