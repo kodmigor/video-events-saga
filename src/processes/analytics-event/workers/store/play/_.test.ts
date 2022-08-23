@@ -1,7 +1,7 @@
 import { analyticsEventChannel, analyticsEventModel } from 'entities/analytics-event'
 import { expectSaga } from 'redux-saga-test-plan'
 import { AnalyticsEvent } from 'shared/models'
-import { videoPlayerModel } from 'shared/packages'
+import { videoPlayerChannel } from 'shared/packages'
 import { createMock } from 'ts-auto-mock'
 import { playWorker } from './play'
 
@@ -10,7 +10,7 @@ describe('play analytics event worker', () => {
   const channel = analyticsEventChannel.play(event)
 
   test('if paused', () => {
-    const playerPausedAction = videoPlayerModel.pause(1)
+    const playerPausedAction = videoPlayerChannel.pause(1)
 
     return expectSaga(playWorker, channel)
       .provide({ race: () => ({ paused: playerPausedAction }) })
@@ -20,7 +20,14 @@ describe('play analytics event worker', () => {
 
   test('if timeout', () => {
     return expectSaga(playWorker, channel)
-      .provide({ race: () => ({ paused: undefined }) })
+      .provide({ race: () => ({ timeout: true }) })
+      .put(analyticsEventModel.drop(event.id))
+      .run()
+  })
+
+  test('if not actual', () => {
+    return expectSaga(playWorker, channel)
+      .provide({ race: () => ({ notActual: true }) })
       .put(analyticsEventModel.drop(event.id))
       .run()
   })

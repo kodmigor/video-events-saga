@@ -6,7 +6,7 @@ import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { MINIMUM_INTERVAL, RefOrNull } from 'shared/lib'
 import { TimestampIdsRefs } from 'shared/models'
-import { getCeiledCurrentTimeInMs, videoPlayerModel, VideoPlayerView } from 'shared/packages'
+import { getCeiledCurrentTimeInMs, videoPlayerChannel, VideoPlayerView } from 'shared/packages'
 import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
 import { AnalyticsEventsOverlay } from 'widgets/analytics-events-overlay'
 
@@ -16,6 +16,7 @@ export function MainPageView () {
   const _timestampIdsRefs = useSelector(analyticsEventModel.selectTimestampIdsRefs)
   const timestampIdsRefs = React.useRef<TimestampIdsRefs>({})
 
+  // TODO: ожидать загрузки событий
   React.useEffect(() => {
     dispatch(analyticsEventApi.getAll())
   }, [])
@@ -31,6 +32,9 @@ export function MainPageView () {
       fullscreenToggle: false,
       pictureInPictureToggle: false
     },
+    userActions: {
+      doubleClick: false
+    },
     responsive: true,
     fluid: true,
     sources: [{
@@ -39,7 +43,7 @@ export function MainPageView () {
     }]
   }
 
-  function handlePlayerReady (player: VideoJsPlayer) {
+  function onPlayerReady (player: VideoJsPlayer) {
     playerRef.current = player
     let intervalId: number
     let prevTimestampInMs = 0
@@ -72,11 +76,11 @@ export function MainPageView () {
       // if (prevTimestampInMs === currentTimestampInMs) return
       // const skippedTimestamps = range(prevTimestampInMs, currentTimestampInMs)
 
-      // if (skippedTimestamps.length > 20) return
+      // if (skippedTimestamps.length > MAX_SKIPPED_TIMESTAMPS) return
 
+      // Вариант 1
       if (prevTimestampInMs === currentTimestampInMs) return
       const skippedTimestamps = range(prevTimestampInMs, currentTimestampInMs)
-
       prevTimestampInMs = currentTimestampInMs
       for (let i = 0; i < skippedTimestamps.length; i++) {
         const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
@@ -88,31 +92,37 @@ export function MainPageView () {
       }
     }
 
-    player.on('timeupdate', () => {
-      console.log('player.paused() ', player.paused())
-      currentTimestampInMs = getCeiledCurrentTimeInMs(player)
-    })
     function onPlaying () {
       prevTimestampInMs = getCeiledCurrentTimeInMs(player)
-      dispatch(videoPlayerModel.play())
+      dispatch(videoPlayerChannel.play())
       videojs.log('playing')
 
       intervalId = player.setInterval(seekForEvents, MINIMUM_INTERVAL)
     }
 
-    player.on('playing', onPlaying)
-
-    player.on('pause', () => {
-      dispatch(videoPlayerModel.pause(getCeiledCurrentTimeInMs(player)))
+    function onPause () {
+      dispatch(videoPlayerChannel.pause(getCeiledCurrentTimeInMs(player)))
       videojs.log('pause')
       if (intervalId) player.clearInterval(intervalId)
-    })
+    }
+
+    function onTimeUpdate () {
+      console.log('player.paused() ', player.paused())
+      currentTimestampInMs = getCeiledCurrentTimeInMs(player)
+      if (player.paused()) {
+        dispatch(videoPlayerChannel.updateTimestamp(currentTimestampInMs))
+      }
+    }
+
+    player.on('playing', onPlaying)
+    player.on('pause', onPause)
+    player.on('timeupdate', onTimeUpdate)
   }
 
   return (
         <div className="MainPage">
             <AnalyticsEventsOverlay />
-            <VideoPlayerView options={playerOptions} onReady={handlePlayerReady} />
+            <VideoPlayerView options={playerOptions} onReady={onPlayerReady} />
         </div>
   )
 }

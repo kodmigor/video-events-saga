@@ -1,4 +1,5 @@
 import { normalize, schema } from 'normalizr'
+import { retry } from 'typed-redux-saga'
 import { milliseconds } from 'shared/lib'
 
 export type AnalyticsEvent = {
@@ -44,8 +45,17 @@ export namespace AnalyticsEvent {
       return normalize<AnalyticsEvent, TimestampIdsRefsEntities>(events, timestampIdsRefsShema).entities[TIMESTAMP_IDS_REFS_NAME]
     }
 
-    export function updateDuration (event: AnalyticsEvent, playerPausedAt: milliseconds):AnalyticsEvent {
+    export function reduceDuration (event: AnalyticsEvent, playerPausedAt: milliseconds):AnalyticsEvent {
       return { ...event, duration: event.timestamp + event.duration - playerPausedAt }
+    }
+
+    export function isActual (event: AnalyticsEvent, currentTimestamp: milliseconds) {
+      console.log('event.timestamp:                  ', event.timestamp)
+      console.log('currentTimestamp:                 ', currentTimestamp)
+      console.log('event.timestamp + event.duration: ', event.timestamp + event.duration)
+      console.log((currentTimestamp >= event.timestamp) && (currentTimestamp < event.timestamp + event.duration))
+      console.log('---------------------------------')
+      return (currentTimestamp >= event.timestamp) && (currentTimestamp < event.timestamp + event.duration)
     }
 
 }
