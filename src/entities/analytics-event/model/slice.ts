@@ -40,19 +40,19 @@ const {
   selectEntities,
   selectIds,
   selectTotal
-} = analyticsEventAdapter.getSelectors((state: RootState) => state.entities.analyticsEvent)
+} = analyticsEventAdapter.getSelectors((state: AppState) => state.entities.analyticsEvent)
 
 function getSelectorById (eventId: number) {
-  return function selectById (state: RootState) {
+  return function selectById (state: AppState) {
     return byId(state, eventId)
   }
 }
 
-function selectFiredIds (state: RootState) {
+function selectFiredIds (state: AppState) {
   return state.entities.analyticsEvent.firedIds
 }
 
-function selectTimestampIdsRefs (state: RootState) {
+function selectTimestampIdsRefs (state: AppState) {
   return state.entities.analyticsEvent.timestampIdsRefs
 }
 
