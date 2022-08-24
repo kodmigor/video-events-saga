@@ -1,0 +1,30 @@
+.VideoAnalytics {
+    position: relative;
+    width: 80%;
+    height: 80%;
+    display: flex;
+    gap: 10px;
+    overflow: hidden;
+    background-color: var(--base-darker);
+    padding: 10px;
+    &__loading {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: var(--base-darker);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 3em;
+    }
+    &__eventsList {
+        flex: 0.3;
+    }
+    &__player {
+        flex: 1;
+        position: relative;
+        display: flex;
+        width: 80%;
+    }
+}
