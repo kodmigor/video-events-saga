@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { bemBlock, milliseconds, MILLISECONDS_PER_SECOND, MINIMUM_INTERVAL, RefOrNull, seconds } from 'shared/lib'
 import { TimestampIdsRefs } from 'shared/models'
 import { getFlooredCurrentTimeInMs, videoPlayerChannel, VideoPlayerView } from 'shared/packages'
-import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
+import { VideoJsPlayer, VideoJsPlayerOptions } from 'video.js'
 import { AnalyticsEventsListView } from 'widgets/analytics-events-list'
 import { AnalyticsEventsOverlayView } from 'widgets/analytics-events-overlay'
 
@@ -15,10 +15,10 @@ export function VideoAnalyticsPageView () {
   const videoAnalyticsBlock = bemBlock('VideoAnalytics')
   const dispatch = useDispatch()
   const playerRef = React.useRef<RefOrNull<VideoJsPlayer>>(null)
+  const loading = useSelector(analyticsEventModel.selectLoading)
   const _timestampIdsRefs = useSelector(analyticsEventModel.selectTimestampIdsRefs)
   const timestampIdsRefs = React.useRef<TimestampIdsRefs>({})
 
-  // TODO: ожидать загрузки событий
   React.useEffect(() => {
     dispatch(analyticsEventApi.getAll())
   }, [])
@@ -44,19 +44,23 @@ export function VideoAnalyticsPageView () {
       type: 'video/mp4'
     }]
   }
-  let prevTimestampInMs = 0
-  let intervalId: number
-  let currentTimestampInMs = 0
+
+  const prevTimestampInMs = React.useRef(0)
+  const intervalId = React.useRef<RefOrNull<number>>(null)
+  const currentTimestampInMs = React.useRef(0)
+
+  function clearSeekForEventsInterval () {
+    if (intervalId.current) playerRef.current!.clearInterval(intervalId.current)
+  }
 
   function onPlayerReady (player: VideoJsPlayer) {
     playerRef.current = player
 
     // Вариант 1
     function seekForEvents () {
-      if (prevTimestampInMs === currentTimestampInMs) return
-      const skippedTimestamps = range(prevTimestampInMs, currentTimestampInMs)
-      console.log({ skippedTimestamps })
-      prevTimestampInMs = currentTimestampInMs
+      if (prevTimestampInMs.current === currentTimestampInMs.current) return
+      const skippedTimestamps = range(prevTimestampInMs.current, currentTimestampInMs.current)
+      prevTimestampInMs.current = currentTimestampInMs.current
       for (let i = 0; i < skippedTimestamps.length; i++) {
         const eventIds = timestampIdsRefs.current[skippedTimestamps[i]]
         if (eventIds?.length) {
@@ -107,13 +111,10 @@ export function VideoAnalyticsPageView () {
     //   }
     // }
 
-    function clearSeekForEventsInterval () {
-      if (intervalId) player.clearInterval(intervalId)
-    }
-
     function onPlaying () {
       dispatch(videoPlayerChannel.play())
-      intervalId = player.setInterval(seekForEvents, MINIMUM_INTERVAL)
+      clearSeekForEventsInterval()
+      intervalId.current = player.setInterval(seekForEvents, MINIMUM_INTERVAL)
     }
 
     function onPause () {
@@ -122,13 +123,13 @@ export function VideoAnalyticsPageView () {
     }
 
     function onTimeUpdate () {
-      currentTimestampInMs = getFlooredCurrentTimeInMs(player)
+      currentTimestampInMs.current = getFlooredCurrentTimeInMs(player)
     }
 
     function onSeeked () {
       clearSeekForEventsInterval()
-      prevTimestampInMs = currentTimestampInMs
-      dispatch(videoPlayerChannel.updateTimestamp(currentTimestampInMs))
+      prevTimestampInMs.current = currentTimestampInMs.current
+      dispatch(videoPlayerChannel.updateTimestamp(currentTimestampInMs.current))
     }
 
     player.on('playing', onPlaying)
@@ -138,12 +139,14 @@ export function VideoAnalyticsPageView () {
   }
 
   function goToEvent (timestamp: milliseconds) {
+    clearSeekForEventsInterval()
     playerRef.current?.currentTime(timestamp / MILLISECONDS_PER_SECOND)
-    prevTimestampInMs = timestamp
+    prevTimestampInMs.current = timestamp
   }
 
   return (
     <div className={videoAnalyticsBlock()}>
+      {loading && <div className={videoAnalyticsBlock('loading')}>Загрузка...</div>}
       <AnalyticsEventsListView
         className={videoAnalyticsBlock('eventsList')}
         goToEvent={goToEvent}

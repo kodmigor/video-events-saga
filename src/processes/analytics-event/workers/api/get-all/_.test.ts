@@ -15,6 +15,8 @@ describe('get all analytics events request worker', () => {
 
     testSaga(getAllWorker, action)
       .next()
+      .put(analyticsEventModel.loading())
+      .next()
       .call(action.payload.request)
       .next(events)
       .call(AnalyticsEvent.makeTimestampIdsRefs, events)
@@ -22,6 +24,8 @@ describe('get all analytics events request worker', () => {
       .put(analyticsEventModel.setAll(events))
       .next()
       .put(analyticsEventModel.setTimestampIdsRefs(refs))
+      .next()
+      .put(analyticsEventModel.loading(false))
       .next()
       .isDone()
   })
