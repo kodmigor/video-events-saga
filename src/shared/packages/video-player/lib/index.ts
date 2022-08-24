@@ -1,1 +1,1 @@
-export * from './get-ceiled-current-time-in-ms'
+export * from './get-floored-current-time-in-ms'

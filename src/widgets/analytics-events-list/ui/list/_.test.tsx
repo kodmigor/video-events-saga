@@ -22,7 +22,7 @@ describe('Analytics events list view', () => {
 
   beforeAll(() => {
     analyticsEvent = createMock<AnalyticsEventStoreState & EntityState<AnalyticsEvent>>()
-    renderEventsList = () => renderWithStore(<AnalyticsEventsListView />, { store })
+    renderEventsList = () => renderWithStore(<AnalyticsEventsListView goToEvent={() => {}} />, { store })
     store.dispatch(analyticsEventModel.setAll(events))
   })
 

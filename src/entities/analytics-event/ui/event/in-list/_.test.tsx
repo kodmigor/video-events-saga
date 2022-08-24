@@ -7,6 +7,7 @@ import { renderWithStore } from 'test-utils'
 import { createMock } from 'ts-auto-mock'
 import { eventViewBlock } from '../lib/bem-block'
 import { AnalyticsEventInListView } from './in-list'
+import { fireEvent } from '@testing-library/react'
 
 describe('Analytics event in list view', () => {
   let timestamp:milliseconds
@@ -14,7 +15,7 @@ describe('Analytics event in list view', () => {
   let analyticsEvent: AnalyticsEventStoreState & EntityState<AnalyticsEvent>
   let renderEvent : (eventId: number) => ReturnType<typeof renderWithStore>
   const eventViewCssSelector = `.${eventViewBlock.toString()}`
-  const eventTimestampCssSelector = `.${eventViewBlock.toString()} pre`
+  const goTo = jest.fn()
 
   beforeAll(() => {
     timestamp = 320303
@@ -24,16 +25,20 @@ describe('Analytics event in list view', () => {
       ids: [event.id]
     })
     renderEvent = (eventId) => renderWithStore(
-    <AnalyticsEventInListView id={eventId} />,
+    <AnalyticsEventInListView id={eventId} goTo={goTo} />,
     { preloadedState: { entities: { analyticsEvent } } }
     )
   })
 
   test('should contain formatted timestamp ', () => {
-    const { container } = renderEvent(event.id)
-    const eventTimestamp = container.querySelector<HTMLDivElement>(eventTimestampCssSelector)!
+    const { getByText } = renderEvent(event.id)
+    getByText(dayjs(event.timestamp).format('mm:ss:SSS'))
+  })
 
-    expect(eventTimestamp.textContent).toEqual(dayjs(event.timestamp).format('mm:ss:SSS'))
+  test('should fire "goTo" callback on click', () => {
+    const { container } = renderEvent(event.id)
+    fireEvent.click(container.querySelector(eventViewCssSelector)!)
+    expect(goTo).toHaveBeenCalledTimes(1)
   })
 
   test('should return null if store has not event with id passed into component ', () => {

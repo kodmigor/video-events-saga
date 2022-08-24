@@ -15,8 +15,8 @@ export function setupStore (preloadedState?: PreloadedState<AppState>) {
     reducer: rootReducer,
     preloadedState,
     middleware: [
-      sagaMiddleware,
-      logger
+      sagaMiddleware
+      // logger
     ]
   })
   sagaMiddleware.run(rootSaga)

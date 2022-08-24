@@ -50,11 +50,6 @@ export namespace AnalyticsEvent {
     }
 
     export function isActual (event: AnalyticsEvent, currentTimestamp: milliseconds) {
-      console.log('event.timestamp:                  ', event.timestamp)
-      console.log('currentTimestamp:                 ', currentTimestamp)
-      console.log('event.timestamp + event.duration: ', event.timestamp + event.duration)
-      console.log((currentTimestamp >= event.timestamp) && (currentTimestamp < event.timestamp + event.duration))
-      console.log('---------------------------------')
       return (currentTimestamp >= event.timestamp) && (currentTimestamp < event.timestamp + event.duration)
     }
 

@@ -8,12 +8,13 @@ const eventsListViewBlock = bemBlock('AnalyticsEventsList')
 
 interface AnalyticsEventsListView {
   className?: string
+  goToEvent: AnalyticsEventInListView['goTo']
 }
 
-export function AnalyticsEventsListView ({ className }: AnalyticsEventsListView) {
+export function AnalyticsEventsListView ({ className, goToEvent }: AnalyticsEventsListView) {
   const eventsIds = useSelector(analyticsEventModel.selectIds) as number[]
 
-  const eventViews = React.useMemo(() => eventsIds.map((id) => <AnalyticsEventInListView id={id} key={id} />),
+  const eventViews = React.useMemo(() => eventsIds.map((id) => <AnalyticsEventInListView id={id} key={id} goTo={goToEvent} />),
     [eventsIds.length])
 
   return <div className={eventsListViewBlock.mix(className)}>{eventViews}</div>

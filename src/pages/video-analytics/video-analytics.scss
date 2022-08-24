@@ -5,9 +5,10 @@
     gap: 10px;
     overflow: hidden;
     &__eventsList {
-        flex: 1;
+        flex: .3;
     }
     &__player {
+        flex: 1;
         position: relative;
         display: flex;
         width: 80%;
