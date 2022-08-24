@@ -1,4 +1,5 @@
 import { EntityState } from '@reduxjs/toolkit'
+import { act } from '@testing-library/react'
 import { setupStore } from 'app/store'
 import { analyticsEventModel } from 'entities/analytics-event'
 import { eventViewBlock } from 'entities/analytics-event/ui/event/lib'
@@ -31,23 +32,22 @@ describe('Analytics events overlay view', () => {
 
     let eventViews = getEventViews(container)
     expect(eventViews.length).toBe(0)
-
-    store.dispatch(analyticsEventModel.fire(eventA.id))
+    act(() => { store.dispatch(analyticsEventModel.fire(eventA.id)) })
     rerender(<AnalyticsEventsOverlayView />)
     eventViews = getEventViews(container)
     expect(eventViews.length).toBe(1)
 
-    store.dispatch(analyticsEventModel.fire(eventB.id))
+    act(() => { store.dispatch(analyticsEventModel.fire(eventB.id)) })
     rerender(<AnalyticsEventsOverlayView />)
     eventViews = getEventViews(container)
     expect(eventViews.length).toBe(2)
 
-    store.dispatch(analyticsEventModel.drop(eventA.id))
+    act(() => { store.dispatch(analyticsEventModel.drop(eventA.id)) })
     rerender(<AnalyticsEventsOverlayView />)
     eventViews = getEventViews(container)
     expect(eventViews.length).toBe(1)
 
-    store.dispatch(analyticsEventModel.drop(eventB.id))
+    act(() => { store.dispatch(analyticsEventModel.drop(eventB.id)) })
     rerender(<AnalyticsEventsOverlayView />)
     eventViews = getEventViews(container)
     expect(eventViews.length).toBe(0)
