@@ -45,11 +45,11 @@ export function VideoAnalyticsPageView () {
     }]
   }
   let prevTimestampInMs = 0
+  let intervalId: number
+  let currentTimestampInMs = 0
 
   function onPlayerReady (player: VideoJsPlayer) {
     playerRef.current = player
-    let intervalId: number
-    let currentTimestampInMs = 0
 
     // Вариант 1
     function seekForEvents () {
@@ -78,16 +78,18 @@ export function VideoAnalyticsPageView () {
 
     // Однако такой варинат также значительно увеличивает частоту постановки функции `seekForEvents` в очередь событий js,
     // что может повлиять на корректность работы.
-    // (пример: очередной вызов функции `onPlaying` после перемотки может встать в очередь уже после того, как там оказалась
-    // функция `seekForEvents`, вызванная во время работы предыдущего запуска `onPlaying`,
-    // создавая тем самым ситуацию, описанную выше (*))
 
-    // Субъективно, визуальной разницы между обоими вариантами нет,
+    // Пример обнаруженной уязвимости: очередной вызов функции `onPlaying` после перемотки может встать в очередь уже после того,
+    // как там оказалась функция `seekForEvents`, вызванная во время работы предыдущего запуска `onPlaying`,
+    // создавая тем самым ситуацию, описанную выше (*)
+
+    // Субъективно, особой визуальной разницы между обоими вариантами нет (при использовании второго варианта отображение
+    // события при переходе к временной метке из списка происходит немного быстрее),
     // поэтому, если в ТЗ нет конкретики по вопросу частоты поиска событий аналитики во время воспроизведения,
     // а также в связи с вышеописанными рисками, полагаю, что варинат 1 более оптимальный.
 
     // function seekForEvents () {
-    //   const currentTimestampInMs = getCeiledCurrentTimeInMs(player)
+    //   const currentTimestampInMs = getFlooredCurrentTimeInMs(player)
     //   const MAX_SKIPPED_TIMESTAMPS = 20
     //   if (prevTimestampInMs === currentTimestampInMs) return
 
@@ -110,37 +112,29 @@ export function VideoAnalyticsPageView () {
     }
 
     function onPlaying () {
-      videojs.log('onPlaying')
-      // clearSeekForEventsInterval()
       dispatch(videoPlayerChannel.play())
-
       intervalId = player.setInterval(seekForEvents, MINIMUM_INTERVAL)
     }
 
     function onPause () {
-      videojs.log('onPause')
-
       dispatch(videoPlayerChannel.pause(getFlooredCurrentTimeInMs(player)))
       clearSeekForEventsInterval()
     }
 
     function onTimeUpdate () {
-      videojs.log('onTimeUpdate')
-
       currentTimestampInMs = getFlooredCurrentTimeInMs(player)
     }
 
     function onSeeked () {
-      videojs.log('onSeeked')
-      currentTimestampInMs = getFlooredCurrentTimeInMs(player)
+      clearSeekForEventsInterval()
       prevTimestampInMs = currentTimestampInMs
       dispatch(videoPlayerChannel.updateTimestamp(currentTimestampInMs))
     }
 
     player.on('playing', onPlaying)
-    player.on('seeked', onSeeked)
-    player.on('pause', onPause)
     player.on('timeupdate', onTimeUpdate)
+    player.on('pause', onPause)
+    player.on('seeked', onSeeked)
   }
 
   function goToEvent (timestamp: milliseconds) {
